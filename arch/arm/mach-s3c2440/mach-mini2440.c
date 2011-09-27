@@ -47,6 +47,7 @@
 #include <plat/iic.h>
 #include <plat/mci.h>
 #include <plat/udc.h>
+#include <plat/ts.h>
 
 #include <linux/mtd/mtd.h>
 #include <linux/mtd/nand.h>
@@ -166,6 +167,43 @@ static struct s3c2410fb_display mini2440_lcd_cfg[] __initdata = {
 				 tested with the FPGA shield */
 		.lcdcon5	= (S3C2410_LCDCON5_FRM565 |
 				   S3C2410_LCDCON5_HWSWP),
+	},
+	[3] = {	/* mini2440 + 3.5" TFT + TS -- New model as Nov 2009 "T35" */
+		_LCD_DECLARE(
+			7,			/* The 3.5 is quite fast */
+			240, 21, 25, 6,		/* x timing */
+			320, 2, 4, 2,		/* y timing */
+			40),			/* refresh rate */
+		.lcdcon5	= (S3C2410_LCDCON5_FRM565 |
+				   S3C2410_LCDCON5_INVVLINE |
+				   S3C2410_LCDCON5_INVVFRAME |
+				   S3C2410_LCDCON5_INVVDEN |
+				   S3C2410_LCDCON5_PWREN),
+	},
+	[4] = { /* mini2440 + 5.6" TFT + touchscreen -- Innolux AT056TN52 */
+		/* be sure the "power" jumper is set accordingly ! */
+		_LCD_DECLARE(
+			10,			/* the 5.3" runs slower */
+			640, 41, 68, 22,	/* x timing */
+			480, 26, 6, 2,		/* y timing */
+			40),			/* refresh rate */
+		.lcdcon5	= (S3C2410_LCDCON5_FRM565 |
+				   S3C2410_LCDCON5_INVVLINE |
+				   S3C2410_LCDCON5_INVVFRAME |
+				   S3C2410_LCDCON5_PWREN),
+	},
+	[5] = { /* mini2440 + 3,5" TFT + touchscreen -- SONY X35 */
+		_LCD_DECLARE(
+			7,
+			240, 1, 26, 5,		/* x timing */
+			320, 1, 5, 9,		/* y timing */
+			60),			/* refresh rate */
+		.lcdcon5	= (S3C2410_LCDCON5_FRM565 |
+					S3C2410_LCDCON5_INVVDEN |
+					S3C2410_LCDCON5_INVVFRAME |
+					S3C2410_LCDCON5_INVVLINE |
+					S3C2410_LCDCON5_INVVCLK |
+					S3C2410_LCDCON5_HWSWP),
 	},
 };
 
@@ -378,85 +416,76 @@ static struct platform_device mini2440_button_device = {
 	.dev		= {
 		.platform_data	= &mini2440_button_data,
 	}
-};
-
-/* LEDS */
-
-static struct s3c24xx_led_platdata mini2440_led1_pdata = {
-	.name		= "led1",
-	.gpio		= S3C2410_GPB(5),
-	.flags		= S3C24XX_LEDF_ACTLOW | S3C24XX_LEDF_TRISTATE,
-	.def_trigger	= "heartbeat",
-};
-
-static struct s3c24xx_led_platdata mini2440_led2_pdata = {
-	.name		= "led2",
-	.gpio		= S3C2410_GPB(6),
-	.flags		= S3C24XX_LEDF_ACTLOW | S3C24XX_LEDF_TRISTATE,
-	.def_trigger	= "nand-disk",
-};
-
-static struct s3c24xx_led_platdata mini2440_led3_pdata = {
-	.name		= "led3",
-	.gpio		= S3C2410_GPB(7),
-	.flags		= S3C24XX_LEDF_ACTLOW | S3C24XX_LEDF_TRISTATE,
-	.def_trigger	= "mmc0",
-};
-
-static struct s3c24xx_led_platdata mini2440_led4_pdata = {
-	.name		= "led4",
-	.gpio		= S3C2410_GPB(8),
-	.flags		= S3C24XX_LEDF_ACTLOW | S3C24XX_LEDF_TRISTATE,
-	.def_trigger	= "",
-};
-
-static struct s3c24xx_led_platdata mini2440_led_backlight_pdata = {
-	.name		= "backlight",
-	.gpio		= S3C2410_GPG(4),
-	.def_trigger	= "backlight",
-};
-
-static struct platform_device mini2440_led1 = {
-	.name		= "s3c24xx_led",
-	.id		= 1,
-	.dev		= {
-		.platform_data	= &mini2440_led1_pdata,
+ };
+ 
+ /* LEDS */
+static struct gpio_led gpio_leds[] = {
+	{
+		.name			= "led1",
+		.gpio			= S3C2410_GPB(5),
+		.active_low		= 1,
+		.default_trigger	= "heartbeat",
 	},
-};
-
-static struct platform_device mini2440_led2 = {
-	.name		= "s3c24xx_led",
-	.id		= 2,
-	.dev		= {
-		.platform_data	= &mini2440_led2_pdata,
+	{
+		.name			= "led2",
+		.gpio			= S3C2410_GPB(6),
+		.active_low		= 1,
+		.default_trigger	= "nand-disk",
+		.default_state		= LEDS_GPIO_DEFSTATE_OFF,
 	},
-};
-
-static struct platform_device mini2440_led3 = {
-	.name		= "s3c24xx_led",
-	.id		= 3,
-	.dev		= {
-		.platform_data	= &mini2440_led3_pdata,
+	{
+		.name			= "led3",
+		.gpio			= S3C2410_GPB(7),
+		.active_low		= 1,
+		.default_trigger	= "mmc0",
+		.default_state		= LEDS_GPIO_DEFSTATE_OFF,
 	},
-};
+	{
+		.name			= "led4",
+		.gpio			= S3C2410_GPB(8),
+		.active_low		= 1,
+		.default_trigger	= "none",
+		.default_state		= LEDS_GPIO_DEFSTATE_OFF,
+	}
+ };
+ 
+static struct gpio_led backlight_led[] = {
+	{
+		.name			= "backlight",
+		.gpio			= S3C2410_GPG(4),
+		.active_low		= 0,
+		.default_trigger	= "backlight",
+		.default_state		= LEDS_GPIO_DEFSTATE_ON,
+	}
+ };
+ 
+static struct gpio_led_platform_data gpio_led_info = {
+	.leds		= gpio_leds,
+	.num_leds	= ARRAY_SIZE(gpio_leds),
+ };
+ 
+static struct gpio_led_platform_data backlight_info = {
+	.leds		= backlight_led,
+	.num_leds	= ARRAY_SIZE(backlight_led),
+ };
+ 
+static struct platform_device mini2440_leds = {
+	.name	= "leds-gpio",
+	.id	= 0,
+	.dev	= {
+		.platform_data	= &gpio_led_info,
+	}
+ };
+ 
+ static struct platform_device mini2440_led_backlight = {
+	.name	= "leds-gpio",
+	.id	= 1,
+	.dev	= {
+		.platform_data	= &backlight_info,
+	}
+ };
 
-static struct platform_device mini2440_led4 = {
-	.name		= "s3c24xx_led",
-	.id		= 4,
-	.dev		= {
-		.platform_data	= &mini2440_led4_pdata,
-	},
-};
-
-static struct platform_device mini2440_led_backlight = {
-	.name		= "s3c24xx_led",
-	.id		= 5,
-	.dev		= {
-		.platform_data	= &mini2440_led_backlight_pdata,
-	},
-};
-
-/* AUDIO */
+ /* AUDIO */
 
 static struct s3c24xx_uda134x_platform_data mini2440_audio_pins = {
 	.l3_clk = S3C2410_GPB(4),
@@ -493,6 +522,11 @@ static struct platform_device uda1340_codec = {
 		.id = -1,
 };
 
+static struct s3c2410_ts_mach_info mini2440_ts_cfg __initdata = {
+	.delay = 10000,
+	.presc = 0xff, /* slow as we can go */
+};
+
 static struct platform_device *mini2440_devices[] __initdata = {
 	&s3c_device_ohci,
 	&s3c_device_wdt,
@@ -500,10 +534,7 @@ static struct platform_device *mini2440_devices[] __initdata = {
 	&s3c_device_rtc,
 	&s3c_device_usbgadget,
 	&mini2440_device_eth,
-	&mini2440_led1,
-	&mini2440_led2,
-	&mini2440_led3,
-	&mini2440_led4,
+	&mini2440_leds,
 	&mini2440_button_device,
 	&s3c_device_nand,
 	&s3c_device_sdi,
@@ -511,6 +542,7 @@ static struct platform_device *mini2440_devices[] __initdata = {
 	&uda1340_codec,
 	&mini2440_audio,
 	&samsung_asoc_dma,
+	&s3c_device_adc,
 };
 
 static void __init mini2440_map_io(void)
@@ -594,8 +626,13 @@ static void __init mini2440_parse_features(
 			features->done |= FEATURE_BACKLIGHT;
 			break;
 		case 't':
-			printk(KERN_INFO "MINI2440: '%c' ignored, "
-				"touchscreen not compiled in\n", f);
+			if (features->done & FEATURE_TOUCH)
+				printk(KERN_INFO "MINI2440: '%c' ignored, "
+					"touchscreen already set\n", f);
+			else
+				features->optional[features->count++] =
+						&s3c_device_ts;
+			features->done |= FEATURE_TOUCH;
 			break;
 		case 'c':
 			if (features->done & FEATURE_CAMERA)
@@ -662,6 +699,7 @@ static void __init mini2440_init(void)
 	s3c24xx_mci_set_platdata(&mini2440_mmc_cfg);
 	s3c_nand_set_platdata(&mini2440_nand_info);
 	s3c_i2c0_set_platdata(NULL);
+	s3c24xx_ts_set_platdata(&mini2440_ts_cfg);
 
 	i2c_register_board_info(0, mini2440_i2c_devs,
 				ARRAY_SIZE(mini2440_i2c_devs));

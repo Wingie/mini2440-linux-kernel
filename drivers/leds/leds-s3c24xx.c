@@ -95,7 +95,11 @@ static int s3c24xx_led_probe(struct platform_device *dev)
 		s3c2410_gpio_cfgpin(pdata->gpio, S3C2410_GPIO_INPUT);
 	} else {
 		s3c2410_gpio_pullup(pdata->gpio, 0);
-		s3c2410_gpio_setpin(pdata->gpio, 0);
+
+		if (pdata->flags & S3C24XX_LEDF_STARTON)
+			s3c2410_gpio_setpin(pdata->gpio, 1);
+		else
+			s3c2410_gpio_setpin(pdata->gpio, 0);
 		s3c2410_gpio_cfgpin(pdata->gpio, S3C2410_GPIO_OUTPUT);
 	}
 
