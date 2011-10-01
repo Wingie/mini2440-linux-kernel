@@ -205,6 +205,19 @@ static struct s3c2410fb_display mini2440_lcd_cfg[] __initdata = {
 					S3C2410_LCDCON5_INVVCLK |
 					S3C2410_LCDCON5_HWSWP),
 	},
+ [6] = { /* LCD-W35i 3.5" display (LQ035Q1DG06)*/
+		 _LCD_DECLARE(
+		 7, /* clock */
+		 320, 68, 66, 4, /* xres, margin_right,margin_left, hsync */
+		 240, 4, 4, 9, /* yres, margin_top,margin_bottom, vsync */
+		 60), /* refresh rate */
+		 .lcdcon5 = (S3C2410_LCDCON5_FRM565 |
+		 S3C2410_LCDCON5_INVVDEN |
+		 S3C2410_LCDCON5_INVVFRAME |
+		 S3C2410_LCDCON5_INVVLINE |
+		 S3C2410_LCDCON5_INVVCLK |
+		 S3C2410_LCDCON5_HWSWP),
+	},
 };
 
 /* todo - put into gpio header */
